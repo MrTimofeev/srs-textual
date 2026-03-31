@@ -1,20 +1,31 @@
-# Python
+```
+# Compiled and build artifacts
+*.pyc
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+
+# Dependencies
+.venv/
 venv/
-env/
-.env
+node_modules/
 
-# Textual
-*.tcss.cache
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Проектное
-reviews.json
+# Logs and temp files
 *.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Test and coverage
+.test*
+.tests*
+*.test.py
+test_*.py
+tests/
+```

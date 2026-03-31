@@ -7,6 +7,8 @@ from textual.containers import Container, Vertical, Horizontal, ScrollableContai
 from textual.reactive import var
 from textual import log
 
+import asyncio
+
 from data.models import Note, Question, SessionResult
 from data.storage import Storage
 from parser.question_parser import QuestionParser
@@ -175,6 +177,9 @@ class QuizSessionScreen(Screen):
             with ScrollableContainer(id="options-scroll"):
                 yield Vertical(id="options")
             
+            # Кнопка для перехода к следующему вопросу после ошибки (скрыта по умолчанию)
+            yield Button("Далее →", id="next-question-btn", variant="primary", classes="hidden")
+            
             # Блок завершения (скрыт по умолчанию)
             yield Label("✅ Все вопросы пройдены", id="done-label", classes="success")
             yield Button("Следующая заметка →", id="next-note-btn", variant="primary")
@@ -221,9 +226,10 @@ class QuizSessionScreen(Screen):
             self.query_one("#question-text", Static).update(q.text)
             self.query_one("#status", Static).update(f"Ошибок в заметке: {self.errors_count}")
             
-            # Скрываем блок завершения
+            # Скрываем блок завершения и кнопку "Далее"
             self.query_one("#done-label", Label).display = False
             self.query_one("#next-note-btn", Button).display = False
+            self.query_one("#next-question-btn", Button).display = False
             
             # Показываем контейнер вопроса
             self.query_one("#question-label", Label).display = True
@@ -233,18 +239,24 @@ class QuizSessionScreen(Screen):
             
             # ✅ ГЛАВНОЕ: Пересоздаем кнопки вариантов
             options_container = self.query_one("#options", Vertical)
+            
+            # Сначала скрываем контейнер и очищаем его
+            options_container.display = False
             children_to_remove = list(options_container.children)
             
             for child in children_to_remove:
                 child.remove()
             
+            # Даем время на очистку DOM
+            await asyncio.sleep(0.05)
             
             # Затем создаем новые кнопки
             for i, option_text in enumerate(q.options):
                 btn = Button(f"{i + 1}. {option_text}", id=f"opt-{i}", variant="default")
                 await options_container.mount(btn)
             
-            self.notify(f"{options_container.children}")
+            # Показываем контейнер с кнопками
+            options_container.display = True
             
             # Фокус на первую кнопку
             self.set_timer(0.1, self._focus_first_option) # Небольшая задержка для стабильности
@@ -284,6 +296,9 @@ class QuizSessionScreen(Screen):
         # Если виджеты еще не созданы (до on_mount), ничего не делаем
         if not self.is_mounted:
             return
+        # Проверяем что это не первый вызов при инициализации (idx=0 уже отрисован в on_mount)
+        if idx == 0 and self.current_question_idx == 0:
+            return
         await self._update_ui_for_question()
 
     def watch_errors_count(self, count: int) -> None:
@@ -318,6 +333,11 @@ class QuizSessionScreen(Screen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         btn_id = event.button.id
         
+        if btn_id == "next-question-btn":
+            # Переход к следующему вопросу после ошибки
+            self.current_question_idx += 1
+            return
+        
         if btn_id == "next-note-btn":
             self._complete_note(score=2)
             return
@@ -339,7 +359,13 @@ class QuizSessionScreen(Screen):
                 self.notify("❌ Ошибка!", severity="error", timeout=2)
                 self.errors_count += 1 # Триггерит watch_errors_count
                 self._highlight_correct_answer(q.correct_index)
-                # При ошибке не переключаем вопрос, даем посмотреть
+                # Показываем кнопку "Далее" для перехода к следующему вопросу
+                try:
+                    next_btn = self.query_one("#next-question-btn", Button)
+                    next_btn.display = True
+                    next_btn.focus()
+                except Exception:
+                    pass
 
     def _highlight_correct_answer(self, correct_idx: int):
         """Подсвечивает правильный ответ"""

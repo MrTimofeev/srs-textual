@@ -51,6 +51,16 @@ Screen {
     text-style: bold;
 }
 
+Button.correct {
+    background: $success 60%;
+    color: $text;
+    text-style: bold;
+}
+
+Button.hidden {
+    display: none;
+}
+
 #done-msg {
     text-align: center;
     margin: 2 0;
