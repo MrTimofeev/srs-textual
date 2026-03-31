@@ -1,7 +1,7 @@
 from textual.screen import Screen
 from textual.widgets import (
     Header, Footer, Static, Label, Button, 
-    ProgressBar, Checkbox, RadioButton, RadioSet
+    ProgressBar, RadioButton, RadioSet
 )
 from textual.containers import Container, Vertical, Horizontal, ScrollableContainer
 from textual.reactive import var
@@ -207,6 +207,10 @@ class QuizSessionScreen(Screen):
 
     def _show_question_state(self):
         """Отображает вопрос и варианты"""
+        # Проверяем что вопрос существует
+        if not self.current_questions or self.current_question_idx >= len(self.current_questions):
+            return
+        
         q = self.current_questions[self.current_question_idx]
         
         try:
@@ -224,15 +228,18 @@ class QuizSessionScreen(Screen):
             # Показываем контейнер вопроса
             self.query_one("#question-label", Label).display = True
             self.query_one("#question-text", Static).display = True
-            self.query_one("#options-scroll", ScrollableContainer).display = True
+            options_scroll = self.query_one("#options-scroll", ScrollableContainer)
+            options_scroll.display = True
             
             # ✅ ГЛАВНОЕ: Пересоздаем кнопки вариантов
             options_container = self.query_one("#options", Vertical)
-            options_container.remove_children() # Очищаем старые
+            for child in list(options_container.children):
+                child.remove()
             
+            # Затем создаем новые кнопки
             for i, option_text in enumerate(q.options):
                 btn = Button(f"{i + 1}. {option_text}", id=f"opt-{i}", variant="default")
-                options_container.mount(btn) # Монтируем новые
+                options_container.mount(btn)
             
             # Фокус на первую кнопку
             self.set_timer(0.1, self._focus_first_option) # Небольшая задержка для стабильности

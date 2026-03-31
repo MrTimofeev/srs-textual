@@ -71,7 +71,7 @@ class Storage:
         if not due and future:
             import random
             random.shuffle(future)
-            due = future[:config.DEFAULT_RANDON_COUNT]
+            due = future[:config.DEFAULT_RANDOM_COUNT]
             for note in due:
                 note.is_random = True
         
