@@ -1,0 +1,82 @@
+Screen {
+    align: center middle;
+    background: $surface;
+}
+
+.title {
+    text-align: center;
+    text-style: bold;
+    color: $primary;
+    margin: 1 0;
+}
+
+.subtitle {
+    text-align: center;
+    color: $secondary;
+    margin: 0 0 1 0;
+}
+
+.container {
+    width: 90%;
+    height: 85%;
+    border: solid $primary;
+    padding: 1 2;
+}
+
+#options-box {
+    width: 100%;
+    height: 40%;
+    min-height: 10;
+    border: solid $secondary;
+    margin: 1 0;
+    overflow-y: auto;
+    padding: 1;
+}
+
+#options-box Button {
+    width: 100%;
+    margin: 1 0;
+    text-align: left;
+}
+
+#options-box Button.correct {
+    background: $success 60%;
+    color: $text;
+    text-style: bold;
+}
+
+#options-box Button.incorrect {
+    background: $error 60%;
+    color: $text;
+    text-style: bold;
+}
+
+#done-msg {
+    text-align: center;
+    margin: 2 0;
+    text-style: bold;
+    color: $success;
+}
+
+#next-btn {
+    dock: bottom;
+    width: 100%;
+    margin: 1 0;
+}
+
+#status-bar {
+    dock: bottom;
+    height: 1;
+    color: $warning;
+    text-align: center;
+}
+
+#prog {
+    width: 100%;
+    margin: 1 0;
+}
+
+.success {
+    color: $success;
+    text-align: center;
+}
