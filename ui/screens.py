@@ -194,18 +194,18 @@ class QuizSessionScreen(Screen):
         
         # Запускаем отрисовку первого вопроса через реактивность
         # Это триггерит метод watch_current_question_idx
-        self._update_ui_for_question()
+        await self._update_ui_for_question()
 
-    def _update_ui_for_question(self):
+    async def _update_ui_for_question(self):
         """Логика обновления UI в зависимости от состояния"""
         # Проверка на выход за границы
         if not self.current_questions or self.current_question_idx >= len(self.current_questions):
             self._show_completion_state()
             return
 
-        self._show_question_state()
+        await self._show_question_state()
 
-    def _show_question_state(self):
+    async def _show_question_state(self):
         """Отображает вопрос и варианты"""
         # Проверяем что вопрос существует
         if not self.current_questions or self.current_question_idx >= len(self.current_questions):
@@ -233,13 +233,18 @@ class QuizSessionScreen(Screen):
             
             # ✅ ГЛАВНОЕ: Пересоздаем кнопки вариантов
             options_container = self.query_one("#options", Vertical)
-            for child in list(options_container.children):
+            children_to_remove = list(options_container.children)
+            
+            for child in children_to_remove:
                 child.remove()
+            
             
             # Затем создаем новые кнопки
             for i, option_text in enumerate(q.options):
                 btn = Button(f"{i + 1}. {option_text}", id=f"opt-{i}", variant="default")
-                options_container.mount(btn)
+                await options_container.mount(btn)
+            
+            self.notify(f"{options_container.children}")
             
             # Фокус на первую кнопку
             self.set_timer(0.1, self._focus_first_option) # Небольшая задержка для стабильности
@@ -274,12 +279,12 @@ class QuizSessionScreen(Screen):
     # === Реактивные наблюдатели (Watchers) ===
     # Вызываются автоматически при изменении соответствующих переменных
     
-    def watch_current_question_idx(self, idx: int) -> None:
+    async def watch_current_question_idx(self, idx: int) -> None:
         """Срабатывает при переходе к новому вопросу"""
         # Если виджеты еще не созданы (до on_mount), ничего не делаем
         if not self.is_mounted:
             return
-        self._update_ui_for_question()
+        await self._update_ui_for_question()
 
     def watch_errors_count(self, count: int) -> None:
         """Срабатывает при изменении счета ошибок"""
@@ -289,7 +294,7 @@ class QuizSessionScreen(Screen):
             except Exception:
                 pass
 
-    def watch_current_note_idx(self, idx: int) -> None:
+    async def watch_current_note_idx(self, idx: int) -> None:
         """Срабатывает при переходе к новой заметке"""
         if not self.is_mounted:
             return
@@ -306,7 +311,7 @@ class QuizSessionScreen(Screen):
         # _load_current_note_data может вызвать _complete_note, который изменит idx снова.
         # Если мы все еще в той же заметке, рисуем вопрос.
         if self.current_note_idx == idx and self.current_questions:
-            self._update_ui_for_question()
+            await self._update_ui_for_question()
 
     # === Обработчики событий ===
 
